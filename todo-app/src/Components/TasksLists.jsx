@@ -4,6 +4,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import "../Styles/style.css"
 import Checkbox from '@mui/material/Checkbox';
+import { useNavigate } from 'react-router-dom';
+
 
 
 
@@ -11,12 +13,17 @@ const TasksLists = () => {
     const [tasks, setTasks] = useState([])
     const [updateItemText, setUpdateItemText] = useState('');
     const [isUpdating, setIsUpdating] = useState('')
+    const navigate = useNavigate();
+
+  const handleEditClick = (taskId) => {
+    navigate(`/edit/${taskId}`);
+  };
 
     const getTasks = async() =>{
         try {
             const response = await axios.get('https://cute-rose-camel-vest.cyclic.app/tasks');
             console.log(response.data)
-            setTasks(response.data);
+            setTasks(response.data || []);
           } catch (error) {
             console.error('Error fetching tasks:', error);
           }
@@ -25,7 +32,7 @@ const TasksLists = () => {
       try {
         let res = await axios.delete(`https://cute-rose-camel-vest.cyclic.app/delete/${id}`);
         console.log(res.data);
-        getTasks();
+        getTasks(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -45,13 +52,14 @@ const TasksLists = () => {
         console.error('Error updating task:', error);
       }
     };
-    const updateItem = async (e) => {
+    const updateItem = async (e, task) => {
       e.preventDefault();
       try {
-        const res = await axios.put(`https://cute-rose-camel-vest.cyclic.app/edit/${isUpdating}`, { item: updateItemText });
+        const res = await axios.put(`https://cute-rose-camel-vest.cyclic.app/edit/${task._id}`, { item: updateItemText });
         console.log(res.data);
-        const updatedItemIndex = tasks.findIndex((item) => item._id === isUpdating);
-        const updatedItem = tasks[updatedItemIndex].item = updateItemText;
+        const updatedItemIndex = tasks.findIndex((item) => item._id === task._id);
+        // const updatedItem = tasks[updatedItemIndex].item = updateItemText;
+        tasks[updatedItemIndex].item = updateItemText
         setUpdateItemText('');
         setIsUpdating('');
       } catch (err) {
@@ -62,8 +70,11 @@ const TasksLists = () => {
     useEffect(() =>{
         getTasks()
     },[])
-    const renderUpdateForm = () => (
-      <form className="update-form" onSubmit={(e) => updateItem(e)}>
+
+    useEffect ( () => {
+    }, [tasks.length])
+    const renderUpdateForm = (task) => (
+      <form className="update-form" onSubmit={(e) => updateItem(e, task)}>
         <input
           className="update-new-input"
           type="text"
@@ -71,7 +82,7 @@ const TasksLists = () => {
           onChange={(e) => {
             setUpdateItemText(e.target.value);
           }}
-          value={updateItemText}
+          value={updateItemText || task.item}
         />
         <button className="update-new-btn" type="submit">
           Update
@@ -82,11 +93,10 @@ const TasksLists = () => {
     <div className='task-container'>
         
         <>
-        {tasks.map((task) => (
+        {(Array.isArray(tasks)?tasks: []).map((task) => (
           <div className='list-container' key={task.id} >
-            {isUpdating === task._id ? (
-              renderUpdateForm()
-            ) : (
+            {isUpdating === task._id  && renderUpdateForm()}
+
             <>
              <Checkbox
             checked={task.completed}
@@ -102,12 +112,13 @@ const TasksLists = () => {
                   onChange={() => handleToggleComplete(task._id, task.completed)}
                 /> */}
             <DeleteIcon onClick={() => handleDelete(task._id)}/>
-            <EditIcon   onClick={() => setIsUpdating(task._id)}/>
+            <EditIcon   onClick={() => handleEditClick(task._id)}/>
             </>
-            )}
+            {/* // )} */}
           </div>
        
         ))}
+        {}
       </>
       
     </div>

@@ -59,12 +59,13 @@ const editTasks = async (req, res) => {
 
   const updatedTask =  async (req, res) => {
     const taskId = req.params.taskId;
-    const { completed } = req.body;
+    const { completed,item } = req.body;
   
     try {
       const updatedTask = await TaskModel.findByIdAndUpdate(
-        taskId,
-        { completed },
+        // taskId,
+        { _id: taskId },
+        { completed, item },
         { new: true }
       );
   
@@ -78,11 +79,28 @@ const editTasks = async (req, res) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   };
+  const getTaskById = async (req, res) => {
+    const taskId = req.params.taskId;
+  
+    try {
+      const task = await TaskModel.findById(taskId);
+  
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+  
+      res.json(task);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  };
 
 module.exports = {
     getAllTasks,
     addTasks,
     editTasks,
     deleteTasks,
-    updatedTask
+    updatedTask,
+    getTaskById
 }

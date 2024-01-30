@@ -33,9 +33,11 @@ const TaskForm = ({ onTaskCreated }) => {
       if (onTaskCreated) {
         onTaskCreated(response.data);
       }
+      if (response.data) {
+        getRenderedTasks();
+      }
       setTask("");
       setDescription("");
-      getRenderedTasks();
     } catch (error) {
       console.error("Error creating task:", error);
     }
